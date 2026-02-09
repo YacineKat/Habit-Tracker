@@ -203,6 +203,17 @@ button {
   padding: 1.5rem;
 }
 
+/* ========================================
+   📱 Mobile Swipe Tabs (page-to-page)
+   ======================================== */
+.tabs-viewport {
+  width: 100%;
+}
+
+.tabs-track {
+  width: 100%;
+}
+
 .tab-content {
   display: none;
   animation: fadeUp 0.3s ease;
@@ -210,6 +221,33 @@ button {
 
 .tab-content.active {
   display: block;
+}
+
+@media (max-width: 900px) {
+  .tabs-viewport {
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  .tabs-track {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    will-change: transform;
+    transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tabs-track.dragging {
+    transition: none;
+  }
+
+  /* All pages must be laid out side-by-side for swipe reveal */
+  .tab-content {
+    display: block !important;
+    width: 100%;
+    flex: 0 0 100%;
+    animation: none;
+  }
 }
 
 @keyframes fadeUp {

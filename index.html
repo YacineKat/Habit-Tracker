@@ -50,144 +50,148 @@
   </header>
 
   <main class="app-main">
-    <!-- ============ Habits Tab ============ -->
-    <section id="tab-habits" class="tab-content active">
-      <!-- Statistics Cards -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-icon">📋</div>
-          <div class="stat-body">
-            <div class="stat-value" id="stat-total">0</div>
-            <div class="stat-label">Total Habits</div>
-          </div>
-        </div>
-        <div class="stat-card accent">
-          <div class="stat-icon">✅</div>
-          <div class="stat-body">
-            <div class="stat-value" id="stat-done-today">0</div>
-            <div class="stat-label">Done Today</div>
-          </div>
-        </div>
-        <div class="stat-card success">
-          <div class="stat-icon">📊</div>
-          <div class="stat-body">
-            <div class="stat-value" id="stat-percentage">0%</div>
-            <div class="stat-label">Completion</div>
-          </div>
-        </div>
-        <div class="stat-card streak">
-          <div class="stat-icon">🔥</div>
-          <div class="stat-body">
-            <div class="stat-value" id="stat-best-streak">0</div>
-            <div class="stat-label">Best Streak</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add Habit -->
-      <div class="add-habit-bar">
-        <input type="text" id="habit-input" placeholder="Add a new habit..." maxlength="60" autocomplete="off">
-        <button class="btn-add" id="btn-add-habit">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Add
-        </button>
-      </div>
-
-      <!-- Habits List -->
-      <div class="habits-list" id="habits-list"></div>
-
-      <div class="empty-state hidden" id="empty-state">
-        <div class="empty-icon">📝</div>
-        <p>No habits yet</p>
-        <span>Start by adding your first habit!</span>
-      </div>
-    </section>
-
-    <!-- ============ Dashboard Tab ============ -->
-    <section id="tab-dashboard" class="tab-content">
-      <!-- Dashboard Summary Row -->
-      <div class="dash-summary">
-        <div class="dash-summary-card">
-          <div class="dash-summary-icon blue">📈</div>
-          <div>
-            <div class="dash-summary-value" id="dash-avg-rate">0%</div>
-            <div class="dash-summary-label">Avg. Completion (14d)</div>
-          </div>
-        </div>
-        <div class="dash-summary-card">
-          <div class="dash-summary-icon green">🏆</div>
-          <div>
-            <div class="dash-summary-value" id="dash-perfect-days">0</div>
-            <div class="dash-summary-label">Perfect Days (14d)</div>
-          </div>
-        </div>
-        <div class="dash-summary-card">
-          <div class="dash-summary-icon amber">⚡</div>
-          <div>
-            <div class="dash-summary-value" id="dash-total-checks">0</div>
-            <div class="dash-summary-label">Total Check-ins</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts Grid -->
-      <div class="dashboard-grid">
-        <!-- Today's Ring -->
-        <div class="chart-card ring-card">
-          <h3>Today's Progress</h3>
-          <div class="ring-container">
-            <canvas id="ring-chart" width="200" height="200"></canvas>
-            <div class="ring-center">
-              <span class="ring-value" id="ring-value">0%</span>
-              <span class="ring-label">Completed</span>
+    <div class="tabs-viewport" id="tabs-viewport">
+      <div class="tabs-track" id="tabs-track">
+        <!-- ============ Habits Tab ============ -->
+        <section id="tab-habits" class="tab-content active">
+          <!-- Statistics Cards -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon">📋</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total Habits</div>
+              </div>
+            </div>
+            <div class="stat-card accent">
+              <div class="stat-icon">✅</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-done-today">0</div>
+                <div class="stat-label">Done Today</div>
+              </div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-icon">📊</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-percentage">0%</div>
+                <div class="stat-label">Completion</div>
+              </div>
+            </div>
+            <div class="stat-card streak">
+              <div class="stat-icon">🔥</div>
+              <div class="stat-body">
+                <div class="stat-value" id="stat-best-streak">0</div>
+                <div class="stat-label">Best Streak</div>
+              </div>
             </div>
           </div>
-          <div class="ring-detail" id="ring-detail">0 / 0 habits</div>
-        </div>
 
-        <!-- Line Chart -->
-        <div class="chart-card line-card">
-          <h3>Daily Progress <small>Last 14 days</small></h3>
-          <div class="chart-wrapper">
-            <canvas id="line-chart"></canvas>
+          <!-- Add Habit -->
+          <div class="add-habit-bar">
+            <input type="text" id="habit-input" placeholder="Add a new habit..." maxlength="60" autocomplete="off">
+            <button class="btn-add" id="btn-add-habit">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add
+            </button>
           </div>
-        </div>
 
-        <!-- Bar Chart -->
-        <div class="chart-card bar-card">
-          <h3>Habit Commitment Ranking</h3>
-          <div class="chart-wrapper bar-wrapper">
-            <canvas id="bar-chart"></canvas>
+          <!-- Habits List -->
+          <div class="habits-list" id="habits-list"></div>
+
+          <div class="empty-state hidden" id="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>No habits yet</p>
+            <span>Start by adding your first habit!</span>
           </div>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <!-- ============ Calendar Tab ============ -->
-    <section id="tab-calendar" class="tab-content">
-      <div class="calendar-header">
-        <button class="btn-icon" id="cal-prev">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <h3 id="cal-month-label"></h3>
-        <button class="btn-icon" id="cal-next">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+        <!-- ============ Dashboard Tab ============ -->
+        <section id="tab-dashboard" class="tab-content">
+          <!-- Dashboard Summary Row -->
+          <div class="dash-summary">
+            <div class="dash-summary-card">
+              <div class="dash-summary-icon blue">📈</div>
+              <div>
+                <div class="dash-summary-value" id="dash-avg-rate">0%</div>
+                <div class="dash-summary-label">Avg. Completion (14d)</div>
+              </div>
+            </div>
+            <div class="dash-summary-card">
+              <div class="dash-summary-icon green">🏆</div>
+              <div>
+                <div class="dash-summary-value" id="dash-perfect-days">0</div>
+                <div class="dash-summary-label">Perfect Days (14d)</div>
+              </div>
+            </div>
+            <div class="dash-summary-card">
+              <div class="dash-summary-icon amber">⚡</div>
+              <div>
+                <div class="dash-summary-value" id="dash-total-checks">0</div>
+                <div class="dash-summary-label">Total Check-ins</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="dashboard-grid">
+            <!-- Today's Ring -->
+            <div class="chart-card ring-card">
+              <h3>Today's Progress</h3>
+              <div class="ring-container">
+                <canvas id="ring-chart" width="200" height="200"></canvas>
+                <div class="ring-center">
+                  <span class="ring-value" id="ring-value">0%</span>
+                  <span class="ring-label">Completed</span>
+                </div>
+              </div>
+              <div class="ring-detail" id="ring-detail">0 / 0 habits</div>
+            </div>
+
+            <!-- Line Chart -->
+            <div class="chart-card line-card">
+              <h3>Daily Progress <small>Last 14 days</small></h3>
+              <div class="chart-wrapper">
+                <canvas id="line-chart"></canvas>
+              </div>
+            </div>
+
+            <!-- Bar Chart -->
+            <div class="chart-card bar-card">
+              <h3>Habit Commitment Ranking</h3>
+              <div class="chart-wrapper bar-wrapper">
+                <canvas id="bar-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Calendar Tab ============ -->
+        <section id="tab-calendar" class="tab-content">
+          <div class="calendar-header">
+            <button class="btn-icon" id="cal-prev">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <h3 id="cal-month-label"></h3>
+            <button class="btn-icon" id="cal-next">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+          <div class="calendar-legend">
+            <span class="legend-item"><span class="legend-dot full"></span> Full completion</span>
+            <span class="legend-item"><span class="legend-dot partial"></span> Partial</span>
+            <span class="legend-item"><span class="legend-dot none"></span> Missed</span>
+          </div>
+        </section>
       </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
-      <div class="calendar-legend">
-        <span class="legend-item"><span class="legend-dot full"></span> Full completion</span>
-        <span class="legend-item"><span class="legend-dot partial"></span> Partial</span>
-        <span class="legend-item"><span class="legend-dot none"></span> Missed</span>
-      </div>
-    </section>
+    </div>
   </main>
 
   <!-- Export Modal -->
@@ -211,6 +215,18 @@
       <div class="modal-actions">
         <button class="btn-primary" id="edit-save">Save</button>
         <button class="btn-ghost" id="edit-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal-overlay hidden" id="delete-modal">
+    <div class="modal">
+      <h3>Delete Habit</h3>
+      <p id="delete-msg">Are you sure you want to delete this habit?</p>
+      <div class="modal-actions">
+        <button class="btn-danger" id="delete-confirm">Delete</button>
+        <button class="btn-ghost" id="delete-cancel">Cancel</button>
       </div>
     </div>
   </div>

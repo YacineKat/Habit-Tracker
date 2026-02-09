@@ -669,68 +669,183 @@ function initEvents() {
   });
 
   // Tabs
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      if (btn.dataset.tab === 'dashboard') renderCharts();
-      if (btn.dataset.tab === 'calendar') renderCalendar();
-    });
-  });
-
-  // Swipe Navigation for Mobile
   const tabs = ['habits', 'dashboard', 'calendar'];
+  const tabsViewport = document.getElementById('tabs-viewport');
+  const tabsTrack = document.getElementById('tabs-track');
+
   function getCurrentTab() {
     const activeBtn = document.querySelector('.tab-btn.active');
     return activeBtn ? activeBtn.dataset.tab : 'habits';
   }
-  function switchToTab(tabName) {
+
+  function getCurrentTabIndex() {
+    const idx = tabs.indexOf(getCurrentTab());
+    return idx >= 0 ? idx : 0;
+  }
+
+  function isSwipeLayoutEnabled() {
+    if (!tabsViewport || !tabsTrack) return false;
+    if (!window.matchMedia) return false;
+    return window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(max-width: 900px)').matches;
+  }
+
+  function setTrackX(x, { animate } = { animate: true }) {
+    if (!tabsTrack) return;
+    if (animate) tabsTrack.classList.remove('dragging');
+    else tabsTrack.classList.add('dragging');
+    tabsTrack.style.transform = `translateX(${x}px)`;
+  }
+
+  function snapTrackToActive({ animate } = { animate: true }) {
+    if (!isSwipeLayoutEnabled()) return;
+    const viewportWidth = tabsViewport.clientWidth || 0;
+    if (!viewportWidth) return;
+    const x = -getCurrentTabIndex() * viewportWidth;
+    setTrackX(x, { animate });
+  }
+
+  function switchToTab(tabName, { animate } = { animate: true }) {
+    if (!tabs.includes(tabName)) return;
+
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
     const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-    if (btn) {
-      btn.classList.add('active');
-      document.getElementById('tab-' + tabName).classList.add('active');
-      if (tabName === 'dashboard') renderCharts();
-      if (tabName === 'calendar') renderCalendar();
-    }
+    const content = document.getElementById('tab-' + tabName);
+    if (!btn || !content) return;
+
+    btn.classList.add('active');
+    content.classList.add('active');
+
+    if (tabName === 'dashboard') renderCharts();
+    if (tabName === 'calendar') renderCalendar();
+
+    snapTrackToActive({ animate });
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchToTab(btn.dataset.tab, { animate: true }));
+  });
+
+  // Swipe Navigation for Mobile
+  function switchToTabIndex(index, { animate } = { animate: true }) {
+    const clamped = Math.max(0, Math.min(tabs.length - 1, index));
+    switchToTab(tabs[clamped], { animate });
   }
   function switchToNextTab() {
-    const current = getCurrentTab();
-    const index = tabs.indexOf(current);
-    const nextIndex = (index + 1) % tabs.length;
-    switchToTab(tabs[nextIndex]);
+    switchToTabIndex(getCurrentTabIndex() + 1, { animate: true });
   }
   function switchToPrevTab() {
-    const current = getCurrentTab();
-    const index = tabs.indexOf(current);
-    const prevIndex = (index - 1 + tabs.length) % tabs.length;
-    switchToTab(tabs[prevIndex]);
+    switchToTabIndex(getCurrentTabIndex() - 1, { animate: true });
   }
 
   // Swipe detection
-  let startX, startY;
+  const isCoarsePointer = () => window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const isSmallScreen = () => window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+  const isModalOpen = () => !!document.querySelector('.modal-overlay:not(.hidden)');
+  const isInteractiveTarget = (el) => {
+    if (!el) return false;
+    return !!el.closest('input, textarea, select, button, a, label, .modal, .tab-nav');
+  };
+
+  let startX = null;
+  let startY = null;
+  let trackingSwipe = false;
+  let dragging = false;
+  let baseX = 0;
+  let startIndex = 0;
+
+  // Keep track aligned on load & resize
+  snapTrackToActive({ animate: false });
+  window.addEventListener('resize', () => snapTrackToActive({ animate: false }));
+
   document.addEventListener('touchstart', (e) => {
+    if (!isCoarsePointer() || !isSmallScreen()) return;
+    if (!isSwipeLayoutEnabled()) return;
+    if (isModalOpen()) return;
+    if (isInteractiveTarget(e.target)) return;
+
+    const viewportWidth = tabsViewport.clientWidth || 0;
+    if (!viewportWidth) return;
+
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
+    trackingSwipe = true;
+    dragging = false;
+
+    startIndex = getCurrentTabIndex();
+    baseX = -startIndex * viewportWidth;
+    setTrackX(baseX, { animate: false });
   }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!trackingSwipe || startX === null || startY === null) return;
+    if (!isSwipeLayoutEnabled()) return;
+
+    const curX = e.touches[0].clientX;
+    const curY = e.touches[0].clientY;
+    const deltaX = curX - startX;
+    const deltaY = curY - startY;
+
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // If user is clearly scrolling vertically, cancel swipe tracking.
+    if (absY > absX && absY > 12) {
+      trackingSwipe = false;
+      startX = null;
+      startY = null;
+      dragging = false;
+      snapTrackToActive({ animate: true });
+      return;
+    }
+
+    // Drag only if swipe is clearly horizontal.
+    if (absX > 6 && absX > absY) {
+      dragging = true;
+
+      const viewportWidth = tabsViewport.clientWidth || 0;
+      const minX = -(tabs.length - 1) * viewportWidth;
+      const maxX = 0;
+
+      let nextX = baseX + deltaX;
+
+      // Resist at bounds.
+      if (nextX > maxX) nextX = maxX + (nextX - maxX) * 0.25;
+      if (nextX < minX) nextX = minX + (nextX - minX) * 0.25;
+
+      setTrackX(nextX, { animate: false });
+    }
+  }, { passive: true });
+
   document.addEventListener('touchend', (e) => {
-    if (!startX || !startY) return;
+    if (!trackingSwipe || startX === null || startY === null) return;
+    if (!isSwipeLayoutEnabled()) return;
+
     const endX = e.changedTouches[0].clientX;
     const endY = e.changedTouches[0].clientY;
-    const diffX = startX - endX;
-    const diffY = startY - endY;
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) { // horizontal swipe, min 50px
-      if (diffX > 0) {
-        switchToNextTab(); // swipe left
-      } else {
-        switchToPrevTab(); // swipe right
-      }
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    const viewportWidth = tabsViewport.clientWidth || 0;
+    const threshold = Math.min(140, Math.max(70, Math.round(viewportWidth * 0.22)));
+
+    // Horizontal swipe only; snap to next/prev if moved enough.
+    if (dragging && absX > absY * 1.2) {
+      if (deltaX <= -threshold) switchToTabIndex(startIndex + 1, { animate: true });
+      else if (deltaX >= threshold) switchToTabIndex(startIndex - 1, { animate: true });
+      else snapTrackToActive({ animate: true });
+    } else {
+      snapTrackToActive({ animate: true });
     }
+
+    trackingSwipe = false;
     startX = null;
     startY = null;
+    dragging = false;
   }, { passive: true });
 
   // Calendar Nav
