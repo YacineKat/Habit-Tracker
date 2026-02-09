@@ -680,6 +680,59 @@ function initEvents() {
     });
   });
 
+  // Swipe Navigation for Mobile
+  const tabs = ['habits', 'dashboard', 'calendar'];
+  function getCurrentTab() {
+    const activeBtn = document.querySelector('.tab-btn.active');
+    return activeBtn ? activeBtn.dataset.tab : 'habits';
+  }
+  function switchToTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if (btn) {
+      btn.classList.add('active');
+      document.getElementById('tab-' + tabName).classList.add('active');
+      if (tabName === 'dashboard') renderCharts();
+      if (tabName === 'calendar') renderCalendar();
+    }
+  }
+  function switchToNextTab() {
+    const current = getCurrentTab();
+    const index = tabs.indexOf(current);
+    const nextIndex = (index + 1) % tabs.length;
+    switchToTab(tabs[nextIndex]);
+  }
+  function switchToPrevTab() {
+    const current = getCurrentTab();
+    const index = tabs.indexOf(current);
+    const prevIndex = (index - 1 + tabs.length) % tabs.length;
+    switchToTab(tabs[prevIndex]);
+  }
+
+  // Swipe detection
+  let startX, startY;
+  document.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!startX || !startY) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const diffX = startX - endX;
+    const diffY = startY - endY;
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) { // horizontal swipe, min 50px
+      if (diffX > 0) {
+        switchToNextTab(); // swipe left
+      } else {
+        switchToPrevTab(); // swipe right
+      }
+    }
+    startX = null;
+    startY = null;
+  }, { passive: true });
+
   // Calendar Nav
   document.getElementById('cal-prev').addEventListener('click', () => {
     calendarDate.setMonth(calendarDate.getMonth() - 1);
