@@ -431,6 +431,34 @@ button { cursor: pointer; }
 }
 .btn-ghost:hover { background: var(--bg-secondary); color: var(--text-primary); }
 
+/* Install Modal Special */
+.install-modal {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.install-header {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.install-icon {
+  font-size: 3rem;
+}
+
+.install-modal h3 {
+  font-size: 1.25rem; font-weight: 800; color: var(--accent-light);
+  margin-bottom: 0.25rem;
+}
+
+.install-modal p {
+  font-size: 0.95rem; margin-bottom: 1.5rem;
+}
+
+.install-modal .modal-actions {
+  justify-content: center;
+}
+
 /* ========================================
    🍞 Toast
    ======================================== */

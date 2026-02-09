@@ -1,6 +1,6 @@
 {
-  "name": "Habit Tracker",
-  "short_name": "Habits",
+  "name": "Nebula Tracker",
+  "short_name": "Nebula",
   "description": "Track your daily habits and build better routines",
   "start_url": "/",
   "display": "standalone",

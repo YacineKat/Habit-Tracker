@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Habit Tracker</title>
+  <title>Nebula Tracker</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6c63ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,7 +26,7 @@
       <div class="header-left">
         <h1 class="logo">
           <span class="logo-icon">🎯</span>
-          Habit Tracker
+          Nebula Tracker
         </h1>
         <span class="date-badge" id="today-date"></span>
       </div>
@@ -202,14 +202,17 @@
     </div>
   </div>
 
-  <!-- Delete Confirm -->
-  <div class="modal-overlay hidden" id="delete-modal">
-    <div class="modal">
-      <h3>Delete Habit</h3>
-      <p id="delete-msg">Are you sure you want to delete this habit?</p>
+  <!-- PWA Install Modal -->
+  <div class="modal-overlay hidden" id="install-modal">
+    <div class="modal install-modal">
+      <div class="install-header">
+        <div class="install-icon">🚀</div>
+        <h3>Nebula Tracker</h3>
+      </div>
+      <p>For a better experience, we recommend downloading the app</p>
       <div class="modal-actions">
-        <button class="btn-danger" id="delete-confirm">Delete</button>
-        <button class="btn-ghost" id="delete-cancel">Cancel</button>
+        <button class="btn-primary" id="install-btn">Download</button>
+        <button class="btn-ghost" id="install-cancel">Cancel</button>
       </div>
     </div>
   </div>

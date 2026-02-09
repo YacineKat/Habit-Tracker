@@ -31,6 +31,9 @@ let ringChartInstance = null;
 let editingHabitId = null;
 let deletingHabitId = null;
 
+// PWA Install
+let deferredPrompt;
+
 // ──────────────────────────────────────────
 // 💾 STORAGE
 // ──────────────────────────────────────────
@@ -702,6 +705,26 @@ function initEvents() {
   document.getElementById('export-cancel').addEventListener('click', () => {
     document.getElementById('export-modal').classList.add('hidden');
   });
+
+  // PWA Install Modal
+  document.getElementById('install-btn').addEventListener('click', () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choiceResult => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    }
+    hideInstallModal();
+  });
+
+  document.getElementById('install-cancel').addEventListener('click', () => {
+    hideInstallModal();
+  });
 }
 
 // ──────────────────────────────────────────
@@ -715,6 +738,41 @@ function init() {
   renderTodayDate();
   renderAll();
   initEvents();
+  initPWA();
+}
+
+function initPWA() {
+  // Listen for beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Show install modal if on mobile and not already installed
+    if (isMobile() && !isInstalled()) {
+      setTimeout(() => showInstallModal(), 2000); // Delay 2 seconds
+    }
+  });
+
+  // Listen for app installed
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hideInstallModal();
+  });
+}
+
+function isMobile() {
+  return window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isInstalled() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function showInstallModal() {
+  document.getElementById('install-modal').classList.remove('hidden');
+}
+
+function hideInstallModal() {
+  document.getElementById('install-modal').classList.add('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', init);
