@@ -1,6 +1,6 @@
 // Service Worker for Habit Tracker PWA
 
-const CACHE_NAME = 'habit-tracker-v1';
+const CACHE_NAME = 'habit-tracker-v1.2.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -18,6 +18,7 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting(); // Force activation of new SW
 });
 
 // Fetch event - serve from cache if available
@@ -44,4 +45,5 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  self.clients.claim(); // Take control immediately
 });
