@@ -24,7 +24,6 @@ export default function useSwipeTabs({
     function isSwipeLayoutEnabled() {
       return !!(
         window.matchMedia
-        && window.matchMedia('(pointer: coarse)').matches
         && window.matchMedia('(max-width: 900px)').matches
       );
     }
