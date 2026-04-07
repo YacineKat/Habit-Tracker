@@ -406,6 +406,7 @@ button {
   transition: var(--transition);
   animation: slideIn 0.25s ease;
   transform-origin: center;
+  touch-action: pan-y;
 }
 
 @keyframes slideIn {
@@ -450,8 +451,6 @@ button {
 body.habit-reorder-active {
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none;
-  overscroll-behavior: none;
 }
 
 .habit-item.dragging {
@@ -815,6 +814,11 @@ body.habit-reorder-active {
 .chart-wrapper {
   position: relative;
   width: 100%;
+}
+
+.chart-wrapper canvas,
+.habit-detail-chart-wrap canvas {
+  touch-action: pan-y;
 }
 
 .line-card .chart-wrapper {
