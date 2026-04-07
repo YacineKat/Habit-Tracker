@@ -1,12 +1,12 @@
 // Service Worker for Habit Tracker PWA
 
-const CACHE_NAME = 'habit-tracker-v1.2.3';
+const CACHE_NAME = 'habit-tracker-v2.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css',
-  '/script.js',
   '/manifest.json',
+  '/Nebula New Logo.png',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
 ];
 
