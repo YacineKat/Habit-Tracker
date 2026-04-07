@@ -1,49 +1,104 @@
 // Service Worker for Habit Tracker PWA
 
-const CACHE_NAME = 'habit-tracker-v2.0.0';
-const urlsToCache = [
-  '/',
+const CACHE_NAME = 'habit-tracker-v2.1.0';
+const CORE_CACHE_URLS = [
   '/index.html',
-  '/style.css',
-  '/manifest.json',
-  '/Nebula New Logo.png',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
 ];
 
-// Install event - cache resources
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+async function warmCoreCache() {
+  const cache = await caches.open(CACHE_NAME);
+
+  await Promise.allSettled(
+    CORE_CACHE_URLS.map(async (url) => {
+      try {
+        await cache.add(url);
+      } catch (err) {
+        // Ignore warm-up failures for individual resources.
+      }
+    }),
   );
-  self.skipWaiting(); // Force activation of new SW
+}
+
+function isCacheableRequest(url) {
+  const isChartCdn = url.href.includes('cdn.jsdelivr.net/npm/chart.js');
+  const isLocalAsset = url.origin === self.location.origin && url.pathname.startsWith('/assets/');
+  const isIndex = url.origin === self.location.origin && url.pathname === '/index.html';
+
+  return isChartCdn || isLocalAsset || isIndex;
+}
+
+async function networkFirstNavigation(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put('/index.html', response.clone());
+    }
+    return response;
+  } catch (err) {
+    const cachedIndex = await cache.match('/index.html');
+    if (cachedIndex) return cachedIndex;
+    throw err;
+  }
+}
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(warmCoreCache());
+  self.skipWaiting();
 });
 
-// Fetch event - serve from cache if available
-self.addEventListener('fetch', event => {
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirstNavigation(request));
+    return;
+  }
+
+  const url = new URL(request.url);
+  if (!isCacheableRequest(url)) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      })
+    caches.match(request).then((cachedResponse) => {
+      const networkResponse = fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+          }
+          return response;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || networkResponse;
+    }),
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
-        })
+          return Promise.resolve();
+        }),
       );
-    })
+    }),
   );
-  self.clients.claim(); // Take control immediately
+
+  self.clients.claim();
 });
