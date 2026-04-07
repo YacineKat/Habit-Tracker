@@ -1,11 +1,4 @@
-/* ========================================
-   🎯 Habit Tracker — Application Logic (EN / LTR)
-   ======================================== */
-
-// ──────────────────────────────────────────
-// 🗃 STATE & CONSTANTS
-// ──────────────────────────────────────────
-
+﻿
 const STORAGE_KEY = 'habit-tracker-data';
 
 const MOTIVATIONAL_MESSAGES = [
@@ -34,9 +27,6 @@ let deletingHabitId = null;
 // PWA Install
 let deferredPrompt;
 
-// ──────────────────────────────────────────
-// 💾 STORAGE
-// ──────────────────────────────────────────
 
 function loadState() {
   try {
@@ -56,9 +46,6 @@ function saveState() {
   catch (e) { console.warn('Failed to save state:', e); }
 }
 
-// ──────────────────────────────────────────
-// 🛠 UTILITIES
-// ──────────────────────────────────────────
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -116,17 +103,11 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ──────────────────────────────────────────
-// 🖥 RENDER — HEADER DATE
-// ──────────────────────────────────────────
 
 function renderTodayDate() {
   document.getElementById('today-date').textContent = formatDate(new Date());
 }
 
-// ──────────────────────────────────────────
-// 🖥 RENDER — STATS
-// ──────────────────────────────────────────
 
 function renderStats() {
   const todayKey = getTodayKey();
@@ -141,9 +122,6 @@ function renderStats() {
   document.getElementById('stat-best-streak').textContent = bestStreak;
 }
 
-// ──────────────────────────────────────────
-// 🖥 RENDER — HABITS LIST
-// ──────────────────────────────────────────
 
 function renderHabits() {
   const list = document.getElementById('habits-list');
@@ -197,9 +175,6 @@ function renderHabits() {
   }).join('');
 }
 
-// ──────────────────────────────────────────
-// 🖥 RENDER ALL
-// ──────────────────────────────────────────
 
 function renderAll() {
   renderStats();
@@ -208,9 +183,6 @@ function renderAll() {
   if (document.getElementById('tab-calendar').classList.contains('active')) renderCalendar();
 }
 
-// ──────────────────────────────────────────
-// 📊 CHARTS
-// ──────────────────────────────────────────
 
 function renderCharts() {
   renderDashSummary();
@@ -285,7 +257,7 @@ function renderRingChart() {
   });
 }
 
-/** Line Chart — last 14 days */
+/** Line chart for the last 14 days */
 function renderLineChart() {
   const canvas = document.getElementById('line-chart');
   const ctx = canvas.getContext('2d');
@@ -364,7 +336,7 @@ function renderLineChart() {
   });
 }
 
-/** Bar Chart — commitment ranking */
+/** Bar chart for commitment ranking */
 function renderBarChart() {
   const canvas = document.getElementById('bar-chart');
   const ctx = canvas.getContext('2d');
@@ -386,7 +358,7 @@ function renderBarChart() {
   barChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: sorted.map(h => h.name.length > 20 ? h.name.substring(0, 20) + '…' : h.name),
+      labels: sorted.map(h => h.name.length > 20 ? h.name.substring(0, 20) + '...' : h.name),
       datasets: [{
         label: 'Commitment %',
         data: sorted.map(h => h.pct),
@@ -439,9 +411,6 @@ function renderBarChart() {
   }
 }
 
-// ──────────────────────────────────────────
-// 📅 CALENDAR
-// ──────────────────────────────────────────
 
 function renderCalendar() {
   const grid = document.getElementById('calendar-grid');
@@ -488,9 +457,6 @@ function isDayPast(year, month, day) {
   return d < today;
 }
 
-// ──────────────────────────────────────────
-// 📤 EXPORT
-// ──────────────────────────────────────────
 
 function exportJSON() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -524,9 +490,6 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// ──────────────────────────────────────────
-// 🍞 TOAST
-// ──────────────────────────────────────────
 
 function showToast(message) {
   const toast = document.getElementById('motivation-toast');
@@ -549,13 +512,12 @@ function checkAllCompleted() {
   }
 }
 
-// ──────────────────────────────────────────
-// ⚡ EVENT HANDLERS
-// ──────────────────────────────────────────
 
 function initEvents() {
   const input = document.getElementById('habit-input');
   const btnAdd = document.getElementById('btn-add-habit');
+  const habitsList = document.getElementById('habits-list');
+  let isHabitReordering = false;
 
   function addHabit() {
     const name = input.value.trim();
@@ -574,7 +536,7 @@ function initEvents() {
   input.addEventListener('keydown', e => { if (e.key === 'Enter') addHabit(); });
 
   // Checkbox toggle
-  document.getElementById('habits-list').addEventListener('change', e => {
+  habitsList.addEventListener('change', e => {
     if (e.target.type !== 'checkbox') return;
     const habit = state.habits.find(h => h.id === e.target.dataset.habitId);
     if (!habit) return;
@@ -594,7 +556,7 @@ function initEvents() {
   });
 
   // Edit / Delete buttons
-  document.getElementById('habits-list').addEventListener('click', e => {
+  habitsList.addEventListener('click', e => {
     const editBtn = e.target.closest('.btn-edit');
     const deleteBtn = e.target.closest('.btn-delete');
 
@@ -614,6 +576,276 @@ function initEvents() {
       document.getElementById('delete-msg').textContent = `Are you sure you want to delete "${habit.name}"?`;
       document.getElementById('delete-modal').classList.remove('hidden');
     }
+  });
+
+  // Long-press drag-and-drop reorder for habits
+  const REORDER_HOLD_MS = 320;
+  const REORDER_MOVE_CANCEL_PX = 10;
+  const REORDER_SMOOTHING = 0.34;
+  const REORDER_WOBBLE_X = 2.2;
+  const REORDER_WOBBLE_DEG = 0.9;
+  const REORDER_WOBBLE_SPEED = 0.018;
+  let reorderPressTimer = null;
+  let reorderPointerId = null;
+  let reorderCandidateItem = null;
+  let reorderDragItem = null;
+  let reorderPlaceholder = null;
+  let reorderStartX = 0;
+  let reorderStartY = 0;
+  let reorderPointerOffsetY = 0;
+  let reorderDragBaseTop = 0;
+  let reorderDragTargetTop = 0;
+  let reorderDragVisualTop = 0;
+  let reorderDragStartedAt = 0;
+  let reorderAnimationFrame = null;
+
+  function clearReorderPressTimer() {
+    if (!reorderPressTimer) return;
+    clearTimeout(reorderPressTimer);
+    reorderPressTimer = null;
+  }
+
+  function stopReorderAnimation() {
+    if (!reorderAnimationFrame) return;
+    cancelAnimationFrame(reorderAnimationFrame);
+    reorderAnimationFrame = null;
+  }
+
+  function resetReorderCandidate() {
+    if (reorderCandidateItem) reorderCandidateItem.classList.remove('reorder-ready');
+    reorderPointerId = null;
+    reorderCandidateItem = null;
+  }
+
+  function isReorderStartTarget(target) {
+    if (!target) return false;
+    if (target.closest('input, button, a, textarea, select, label, .habit-check, .habit-actions')) return false;
+    return !!target.closest('.habit-item');
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function persistHabitOrderFromDom() {
+    const orderedIds = Array.from(habitsList.querySelectorAll('.habit-item')).map(item => item.dataset.id);
+    if (orderedIds.length !== state.habits.length) return;
+
+    const byId = new Map(state.habits.map(habit => [habit.id, habit]));
+    const reordered = orderedIds.map(id => byId.get(id)).filter(Boolean);
+    if (reordered.length !== state.habits.length) return;
+
+    const changed = reordered.some((habit, index) => habit.id !== state.habits[index].id);
+    if (!changed) return;
+
+    state.habits = reordered;
+    saveState();
+  }
+
+  function startHabitReorder() {
+    if (!reorderCandidateItem) return;
+
+    const itemRect = reorderCandidateItem.getBoundingClientRect();
+    reorderCandidateItem.classList.remove('reorder-ready');
+
+    reorderDragItem = reorderCandidateItem;
+    reorderPointerOffsetY = reorderStartY - itemRect.top;
+    reorderDragBaseTop = itemRect.top;
+    reorderDragTargetTop = itemRect.top;
+    reorderDragVisualTop = itemRect.top;
+    reorderDragStartedAt = performance.now();
+
+    reorderPlaceholder = document.createElement('div');
+    reorderPlaceholder.className = 'habit-placeholder';
+    reorderPlaceholder.style.height = `${itemRect.height}px`;
+
+    habitsList.insertBefore(reorderPlaceholder, reorderDragItem.nextSibling);
+
+    reorderDragItem.classList.add('dragging');
+    reorderDragItem.style.width = `${itemRect.width}px`;
+    reorderDragItem.style.height = `${itemRect.height}px`;
+    reorderDragItem.style.left = `${itemRect.left}px`;
+    reorderDragItem.style.top = `${reorderDragBaseTop}px`;
+
+    document.body.appendChild(reorderDragItem);
+
+    habitsList.classList.add('reorder-active');
+    document.body.classList.add('habit-reorder-active');
+    isHabitReordering = true;
+    queueReorderDragAnimation();
+  }
+
+  function renderDraggedItemAt(top, timestamp = performance.now()) {
+    if (!reorderDragItem) return;
+    const deltaY = top - reorderDragBaseTop;
+
+    let wobbleX = 0;
+    let wobbleDeg = 0;
+
+    if (isHabitReordering && !prefersReducedMotion()) {
+      const elapsed = timestamp - reorderDragStartedAt;
+      const wave = Math.sin(elapsed * REORDER_WOBBLE_SPEED);
+      wobbleX = wave * REORDER_WOBBLE_X;
+      wobbleDeg = wave * REORDER_WOBBLE_DEG;
+    }
+
+    reorderDragItem.style.transform = `translate3d(${wobbleX}px, ${deltaY}px, 0) rotate(${wobbleDeg}deg) scale(1.015)`;
+  }
+
+  function animateReorderDrag(timestamp) {
+    if (!reorderDragItem) {
+      reorderAnimationFrame = null;
+      return;
+    }
+
+    const diff = reorderDragTargetTop - reorderDragVisualTop;
+    if (Math.abs(diff) < 0.35) {
+      reorderDragVisualTop = reorderDragTargetTop;
+    } else {
+      reorderDragVisualTop += diff * REORDER_SMOOTHING;
+    }
+
+    renderDraggedItemAt(reorderDragVisualTop, timestamp);
+
+    if (isHabitReordering) {
+      reorderAnimationFrame = requestAnimationFrame(animateReorderDrag);
+    } else {
+      reorderAnimationFrame = null;
+    }
+  }
+
+  function queueReorderDragAnimation() {
+    if (reorderAnimationFrame) return;
+    reorderAnimationFrame = requestAnimationFrame(animateReorderDrag);
+  }
+
+  function updateDragItemPosition(clientY) {
+    if (!reorderDragItem) return;
+    reorderDragTargetTop = clientY - reorderPointerOffsetY;
+    queueReorderDragAnimation();
+  }
+
+  function updatePlaceholderPosition(clientY) {
+    if (!reorderPlaceholder) return;
+
+    const siblings = Array.from(habitsList.querySelectorAll('.habit-item'));
+    let insertBefore = null;
+
+    for (const sibling of siblings) {
+      const rect = sibling.getBoundingClientRect();
+      if (clientY < rect.top + (rect.height / 2)) {
+        insertBefore = sibling;
+        break;
+      }
+    }
+
+    if (insertBefore) {
+      if (reorderPlaceholder.nextElementSibling !== insertBefore) {
+        habitsList.insertBefore(reorderPlaceholder, insertBefore);
+      }
+    } else if (habitsList.lastElementChild !== reorderPlaceholder) {
+      habitsList.appendChild(reorderPlaceholder);
+    }
+  }
+
+  function finishHabitReorder() {
+    clearReorderPressTimer();
+    stopReorderAnimation();
+
+    if (!isHabitReordering || !reorderDragItem || !reorderPlaceholder) {
+      isHabitReordering = false;
+      resetReorderCandidate();
+      return;
+    }
+
+    habitsList.insertBefore(reorderDragItem, reorderPlaceholder);
+    reorderPlaceholder.remove();
+
+    reorderDragItem.classList.remove('dragging');
+    reorderDragItem.style.removeProperty('width');
+    reorderDragItem.style.removeProperty('height');
+    reorderDragItem.style.removeProperty('left');
+    reorderDragItem.style.removeProperty('top');
+    reorderDragItem.style.removeProperty('transform');
+
+    reorderPlaceholder = null;
+    reorderDragItem = null;
+    reorderDragBaseTop = 0;
+    reorderDragTargetTop = 0;
+    reorderDragVisualTop = 0;
+    reorderDragStartedAt = 0;
+
+    habitsList.classList.remove('reorder-active');
+    document.body.classList.remove('habit-reorder-active');
+    isHabitReordering = false;
+
+    persistHabitOrderFromDom();
+    resetReorderCandidate();
+  }
+
+  habitsList.addEventListener('pointerdown', e => {
+    if (state.habits.length < 2) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    if (!isReorderStartTarget(e.target)) return;
+
+    const item = e.target.closest('.habit-item');
+    if (!item || !habitsList.contains(item)) return;
+
+    clearReorderPressTimer();
+    reorderPointerId = e.pointerId;
+    reorderCandidateItem = item;
+    reorderCandidateItem.classList.add('reorder-ready');
+    reorderStartX = e.clientX;
+    reorderStartY = e.clientY;
+
+    const holdDelay = e.pointerType === 'touch' ? REORDER_HOLD_MS : 180;
+    reorderPressTimer = setTimeout(() => {
+      if (!reorderCandidateItem) return;
+      startHabitReorder();
+    }, holdDelay);
+  });
+
+  document.addEventListener('pointermove', e => {
+    if (reorderPointerId !== null && e.pointerId !== reorderPointerId) return;
+
+    if (!isHabitReordering && reorderCandidateItem) {
+      const moved = Math.hypot(e.clientX - reorderStartX, e.clientY - reorderStartY);
+      if (moved > REORDER_MOVE_CANCEL_PX) {
+        clearReorderPressTimer();
+        resetReorderCandidate();
+      }
+      return;
+    }
+
+    if (!isHabitReordering) return;
+
+    if (e.cancelable) e.preventDefault();
+    updateDragItemPosition(e.clientY);
+    updatePlaceholderPosition(e.clientY);
+  });
+
+  document.addEventListener('pointerup', e => {
+    if (reorderPointerId !== null && e.pointerId !== reorderPointerId) return;
+
+    if (isHabitReordering) {
+      finishHabitReorder();
+      return;
+    }
+
+    clearReorderPressTimer();
+    resetReorderCandidate();
+  });
+
+  document.addEventListener('pointercancel', e => {
+    if (reorderPointerId !== null && e.pointerId !== reorderPointerId) return;
+
+    if (isHabitReordering) {
+      finishHabitReorder();
+      return;
+    }
+
+    clearReorderPressTimer();
+    resetReorderCandidate();
   });
 
   // Edit Modal
@@ -762,6 +994,7 @@ function initEvents() {
   document.addEventListener('touchstart', (e) => {
     if (!isCoarsePointer() || !isSmallScreen()) return;
     if (!isSwipeLayoutEnabled()) return;
+    if (isHabitReordering) return;
     if (isModalOpen()) return;
     if (isInteractiveTarget(e.target)) return;
 
@@ -779,6 +1012,14 @@ function initEvents() {
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
+    if (isHabitReordering) {
+      trackingSwipe = false;
+      startX = null;
+      startY = null;
+      dragging = false;
+      return;
+    }
+
     if (!trackingSwipe || startX === null || startY === null) return;
     if (!isSwipeLayoutEnabled()) return;
 
@@ -819,6 +1060,14 @@ function initEvents() {
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
+    if (isHabitReordering) {
+      trackingSwipe = false;
+      startX = null;
+      startY = null;
+      dragging = false;
+      return;
+    }
+
     if (!trackingSwipe || startX === null || startY === null) return;
     if (!isSwipeLayoutEnabled()) return;
 
@@ -895,9 +1144,6 @@ function initEvents() {
   });
 }
 
-// ──────────────────────────────────────────
-// 🚀 INIT
-// ──────────────────────────────────────────
 
 function init() {
   loadState();
