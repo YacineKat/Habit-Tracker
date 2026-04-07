@@ -579,8 +579,8 @@ function initEvents() {
   });
 
   // Long-press drag-and-drop reorder for habits
-  const REORDER_HOLD_MS = 320;
-  const REORDER_MOVE_CANCEL_PX = 10;
+  const REORDER_HOLD_MS = 220;
+  const REORDER_MOVE_CANCEL_PX = 18;
   const REORDER_SMOOTHING = 0.34;
   const REORDER_WOBBLE_X = 2.2;
   const REORDER_WOBBLE_DEG = 0.9;
@@ -598,6 +598,7 @@ function initEvents() {
   let reorderDragVisualTop = 0;
   let reorderDragStartedAt = 0;
   let reorderAnimationFrame = null;
+  let reorderPointerCaptureEl = null;
 
   function clearReorderPressTimer() {
     if (!reorderPressTimer) return;
@@ -611,8 +612,22 @@ function initEvents() {
     reorderAnimationFrame = null;
   }
 
+  function releaseReorderPointerCapture() {
+    if (!reorderPointerCaptureEl || reorderPointerId === null) return;
+    if (!reorderPointerCaptureEl.releasePointerCapture) return;
+    try {
+      if (reorderPointerCaptureEl.hasPointerCapture && reorderPointerCaptureEl.hasPointerCapture(reorderPointerId)) {
+        reorderPointerCaptureEl.releasePointerCapture(reorderPointerId);
+      }
+    } catch (err) {
+      // Ignore pointer capture release errors on unsupported browsers.
+    }
+    reorderPointerCaptureEl = null;
+  }
+
   function resetReorderCandidate() {
     if (reorderCandidateItem) reorderCandidateItem.classList.remove('reorder-ready');
+    releaseReorderPointerCapture();
     reorderPointerId = null;
     reorderCandidateItem = null;
   }
@@ -646,8 +661,6 @@ function initEvents() {
     if (!reorderCandidateItem) return;
 
     const itemRect = reorderCandidateItem.getBoundingClientRect();
-    reorderCandidateItem.classList.remove('reorder-ready');
-
     reorderDragItem = reorderCandidateItem;
     reorderPointerOffsetY = reorderStartY - itemRect.top;
     reorderDragBaseTop = itemRect.top;
@@ -662,6 +675,7 @@ function initEvents() {
     habitsList.insertBefore(reorderPlaceholder, reorderDragItem.nextSibling);
 
     reorderDragItem.classList.add('dragging');
+    reorderDragItem.classList.add('reorder-ready');
     reorderDragItem.style.width = `${itemRect.width}px`;
     reorderDragItem.style.height = `${itemRect.height}px`;
     reorderDragItem.style.left = `${itemRect.left}px`;
@@ -762,6 +776,7 @@ function initEvents() {
     reorderPlaceholder.remove();
 
     reorderDragItem.classList.remove('dragging');
+    reorderDragItem.classList.remove('reorder-ready');
     reorderDragItem.style.removeProperty('width');
     reorderDragItem.style.removeProperty('height');
     reorderDragItem.style.removeProperty('left');
@@ -794,7 +809,16 @@ function initEvents() {
     clearReorderPressTimer();
     reorderPointerId = e.pointerId;
     reorderCandidateItem = item;
-    reorderCandidateItem.classList.add('reorder-ready');
+
+    if (item.setPointerCapture) {
+      try {
+        item.setPointerCapture(e.pointerId);
+        reorderPointerCaptureEl = item;
+      } catch (err) {
+        reorderPointerCaptureEl = null;
+      }
+    }
+
     reorderStartX = e.clientX;
     reorderStartY = e.clientY;
 
@@ -823,6 +847,11 @@ function initEvents() {
     updateDragItemPosition(e.clientY);
     updatePlaceholderPosition(e.clientY);
   });
+
+  document.addEventListener('touchmove', e => {
+    if (!isHabitReordering) return;
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
 
   document.addEventListener('pointerup', e => {
     if (reorderPointerId !== null && e.pointerId !== reorderPointerId) return;

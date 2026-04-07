@@ -450,6 +450,8 @@ button {
 body.habit-reorder-active {
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 .habit-item.dragging {
