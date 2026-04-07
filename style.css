@@ -212,12 +212,24 @@ button {
 }
 
 @media (max-width: 900px) {
-  /* Mobile layout with natural scrolling per tab */
+  /* Mobile app-shell: header fixed, each tab scrolls independently */
   body {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
+    overflow-y: hidden;
+  }
+
+  .app-header {
+    flex-shrink: 0;
   }
 
   .app-main {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     padding: 0 !important;
     margin: 0;
     max-width: 100%;
@@ -225,6 +237,7 @@ button {
 
   .tabs-viewport {
     overflow: hidden;
+    height: 100%;
     touch-action: pan-y;
   }
 
@@ -232,6 +245,7 @@ button {
     display: flex;
     flex-direction: row;
     align-items: stretch;
+    height: 100%;
     will-change: transform;
     transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -245,11 +259,11 @@ button {
     display: block !important;
     flex: 0 0 100%;
     width: 100%;
-    min-height: calc(100dvh - 72px);
+    height: 100%;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
     animation: none;
     padding: 1rem;
     box-sizing: border-box;
@@ -394,7 +408,6 @@ button {
   transition: var(--transition);
   animation: slideIn 0.25s ease;
   transform-origin: center;
-  touch-action: pan-y;
 }
 
 @keyframes slideIn {
@@ -802,11 +815,6 @@ body.habit-reorder-active {
 .chart-wrapper {
   position: relative;
   width: 100%;
-}
-
-.chart-wrapper canvas,
-.habit-detail-chart-wrap canvas {
-  touch-action: pan-y;
 }
 
 .line-card .chart-wrapper {

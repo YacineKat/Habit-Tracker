@@ -165,16 +165,6 @@ export default function useHabitReorder({ setHabits }) {
 
       const itemRect = reorderCandidateItem.getBoundingClientRect();
       reorderDragItem = reorderCandidateItem;
-
-      if (reorderDragItem.setPointerCapture && reorderPointerId !== null) {
-        try {
-          reorderDragItem.setPointerCapture(reorderPointerId);
-          reorderPointerCaptureEl = reorderDragItem;
-        } catch (err) {
-          reorderPointerCaptureEl = null;
-        }
-      }
-
       reorderPointerOffsetY = reorderStartY - itemRect.top;
       reorderDragBaseTop = itemRect.top;
       reorderDragTargetTop = itemRect.top;
@@ -250,6 +240,17 @@ export default function useHabitReorder({ setHabits }) {
       clearReorderPressTimer();
       reorderPointerId = e.pointerId;
       reorderCandidateItem = item;
+
+      // Pointer capture is useful for touch drag reliability, but on desktop mouse
+      // it can swallow click behavior on interactive card content.
+      if (e.pointerType !== 'mouse' && item.setPointerCapture) {
+        try {
+          item.setPointerCapture(e.pointerId);
+          reorderPointerCaptureEl = item;
+        } catch (err) {
+          reorderPointerCaptureEl = null;
+        }
+      }
 
       reorderStartX = e.clientX;
       reorderStartY = e.clientY;
